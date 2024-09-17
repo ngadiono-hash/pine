@@ -1,0 +1,156 @@
+//@version=5
+//@strategy_alert_message {{strategy.order.alert_message}}
+strategy('My Strategy Sept 2024','Debug ExNHL', default_qty_type= strategy.percent_of_equity, default_qty_value= 100, initial_capital= 10000, overlay= true)
+
+import jason5480/time_filters/5 as tif
+
+g1 = "Strategy Settings"
+g2 = "Filter Settings"
+type1 = "1. Momentum"
+type2 = "2. Momentum and Zero Point"
+type3 = "3. Zero Point"
+color_up = color.teal
+color_dn = color.red
+
+// DATE FILTER
+usefromDate = input.bool(false, title = 'From', inline = 'From Date', group = g1)
+fromDate = input.time(defval = timestamp('1 Jan 2022 00:00'), title = '', inline = 'From Date', group = g1)
+usetoDate = input.bool(false, title = 'To ', inline = 'To Date', group = g1)
+toDate = input.time(defval = timestamp('31 Aug 2024 00:00'), title = '', inline = 'To Date', group = g1)
+bool dateFilter = tif.is_in_date_range(usefromDate, fromDate, usetoDate, toDate)
+strategyType = input.string(type1,"Switch Strategy", options = [type1, type2, type3], group = g1)
+buyEnabled = input.bool(true,'Enable Buy', group= g1)
+LSL = input.float(1,'  SL %', group= g1, inline='2')
+LTP = input.float(1.2,'  TP %', group= g1, inline='2')
+sellEnabled = input.bool(true,'Enable Sell', group= g1)
+SSL = input.float(0.4,'  SL %',group= g1, inline='3')
+STP = input.float(0.8,'  TP %', group= g1, inline='3')
+orderDist = input.float(200, "Distance to Order (ticks)", group= g1)
+lifeSpan = input.int(4, "Order Active on bar", group= g1)
+source = input(ohlc4,"Source", group= g2)
+len_hma1 = input.int(60,"Hull MA 1", group=g2)
+len_hma2 = input.int(100,"Hull MA 2", group=g2)
+hma_pos_filter = input.bool(true, title="Filter with hull position?", group= g2)
+squeeze_filter = input.bool(false, "Entry only when Squeeze On", group= g2)
+fillColor = input.bool(true, "Fill Order Color", group= g2)
+// SQUEEZE & HULL FILTER 
+mult_KC = 1.5
+len_KC = 20
+ma_1 = ta.sma(source, len_KC)
+ma_2 = ta.sma(source, len_KC)
+range_ma = ta.sma(high - low, len_KC)
+dev = 2.0 * ta.stdev(source, len_KC)
+upper_bb = ma_1 + dev
+lower_bb = ma_1 - dev
+upper_kc = ma_2 + range_ma * mult_KC
+lower_kc = ma_2 - range_ma * mult_KC
+sqz_on = lower_bb > lower_kc and upper_bb < upper_kc
+sqz_off = lower_bb < lower_kc and upper_bb > upper_kc
+no_sqz = sqz_on == false and sqz_off == false
+val = ta.linreg(source - math.avg(math.avg(ta.highest(hl2, len_KC), ta.lowest(low, len_KC)), ta.sma(hl2, len_KC)), len_KC, 0)
+
+hma1 = ta.hma(source, len_hma1)
+hma2 = ta.hma(source, len_hma2)
+hma1_color = hma1 > hma1[2] ? color_up : color_dn
+hma2_color = hma2 > hma2[2] ? color_up : color_dn
+
+// Logic Condition
+buyKC = ta.crossover(val,nz(val[1]))
+sellKC = ta.crossunder(val,nz(val[1]))
+buyHma = hma_pos_filter ? hma1 > hma2 : true
+sellHma = hma_pos_filter ? hma1 < hma2 : true
+sqzFilter = squeeze_filter ? sqz_off : true
+
+tickToPrice(_Entry, _Ticks) =>
+    _Entry + _Ticks * syminfo.mintick
+priceFunc(_Entry, _Value) =>
+    _Entry * (_Value / 100)
+
+orderUp = strategy.position_size > 0
+orderDn = strategy.position_size < 0
+noOpenOrder = strategy.position_size == 0
+var bool orderPlaced = na
+var int orderBarIndex = na
+float signClose = na
+var float orderLine = na
+
+bool signBuy = false
+buyConfirmed = buyKC and buyHma and buyEnabled and dateFilter and sqzFilter and noOpenOrder
+var float _eB = na
+var float _slB = na
+var float _tpB = na
+
+bool signSell = false
+sellConfirmed = sellKC and sellHma and sellEnabled and dateFilter and sqzFilter and noOpenOrder
+var float _eS = na
+var float _slS = na
+var float _tpS = na
+
+if buyConfirmed
+    signBuy := true
+    orderPlaced := true
+    orderBarIndex := bar_index
+    signClose := close
+    _eB := signClose + orderDist * syminfo.mintick
+    _slB := _eB - priceFunc(_eB, LSL)
+    _tpB := _eB + priceFunc(_eB, LTP)
+    alert("Buy signal is come", alert.freq_once_per_bar)
+    strategy.entry("Buy", strategy.long, stop=_eB)
+    orderLine := _eB
+
+if sellConfirmed
+    signSell := true
+    signClose := close
+    orderPlaced := true
+    orderBarIndex := bar_index
+    _eS := signClose - orderDist * syminfo.mintick
+    _slS := _eS + priceFunc(_eS, SSL)
+    _tpS := _eS - priceFunc(_eS, STP)
+    alert("Sell signal is come", alert.freq_once_per_bar)
+    strategy.entry("Sell", strategy.short, stop=_eS)
+    orderLine := _eS
+
+if (bar_index - orderBarIndex >= lifeSpan)
+    if noOpenOrder and orderPlaced
+        strategy.cancel_all()
+        alert("Order Expired", alert.freq_once_per_bar)
+        orderPlaced := false
+        orderLine := na
+        orderBarIndex := na
+
+if orderUp
+    signBuy := false
+    orderPlaced := false
+    strategy.exit("Buy Exit", from_entry="Buy", stop= _slB, limit= _tpB, comment_loss= "SL", comment_profit= "TP", alert_profit= "Buy Profit", alert_loss= "Buy Lose")
+if orderDn
+    signSell := false
+    orderPlaced := false
+    strategy.exit("Sell Exit", from_entry= "Sell", stop= _slS, limit= _tpS, comment_loss= "SL", comment_profit= "TP", alert_profit= "Sell Profit", alert_loss= "Sell Lose")
+
+plot(orderPlaced ? orderLine : na, "Status Order", color= color.new(#00bcd4,0), style= plot.style_steplinebr)
+plot(hma1,"Hull MA 1", color= color.new(hma1_color,80), linewidth=2)
+plot(hma2,"Hull MA 2", color= color.new(hma2_color,80), linewidth=3)
+// plot for buy order
+plotshape(signBuy, "Buy Signal", location= location.belowbar, color=color_up, style=shape.triangleup)
+plot(signBuy ? _slB : na, "Order Buy SL", color= color.orange, style= plot.style_steplinebr)
+plot(signBuy ? _tpB : na, "Order Buy TP", color= color.blue, style= plot.style_steplinebr)
+// plot buy active
+pb1 = plot(orderUp ? _eB : na, "Order Buy Entry", color= color.black, style= plot.style_steplinebr)
+pb2 = plot(orderUp ? _slB : na, "Buy SL Active", color= color_dn, style= plot.style_steplinebr)
+pb3 = plot(orderUp ? _tpB : na, "Buy TP Active", color= color_up, style= plot.style_steplinebr)
+
+// plot for sell order
+plotshape(signSell, "Sell Signal", location= location.abovebar, color=color_dn, style=shape.triangledown)
+
+plot(signSell ? _slS : na, "Order Sell SL", color= color.orange, style= plot.style_steplinebr)
+plot(signSell ? _tpS : na, "Order Sell TP", color= color.blue, style= plot.style_steplinebr)
+// plot for sell active
+ps1 = plot(orderDn ? _eS : na, "Order Sell Entry", color= color.black, style= plot.style_steplinebr)
+ps2 = plot(orderDn ? _slS : na, "Sell SL Active", color=color_dn, style=plot.style_steplinebr)
+ps3 = plot(orderDn ? _tpS : na, "Sell TP Active", color=color_up, style=plot.style_steplinebr)
+
+fill(pb1,pb2, color= fillColor ? color.new(color_dn,80) : na)
+fill(pb1,pb3, color= fillColor ? color.new(color_up,80) : na)
+fill(ps1,ps2, color= fillColor ? color.new(color_dn,80) : na)
+fill(ps1,ps3, color= fillColor ? color.new(color_up,80) : na)
+barcolor(close >= open ? color.new(color.green,80) : color.new(color.red,80))
