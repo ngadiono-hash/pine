@@ -35,29 +35,30 @@ _GRAY = color.new(color.gray, 50)
 mp_font = font.family_monospace
 mp_number = 1
 mp_page = 20
-//Appearance////////////////////////////////////
-pip20 = input.bool(false, '20+', group = GA, inline = '1')
-bgTrd = input.bool(true, 'W&L', group = GA, inline = '1')
-candle = input.bool(true, 'MOM', group = GA, inline = '1')
-labPips = input.bool(true, 'PIP', group = GA, inline = '1')
-load = input.bool(false, 'LOA', group = GA, inline = '1')
-lineMA = input.bool(false, 'MA', group = GA, inline = '1')
-maType = input.string('HMA', '', options = ['HMA', 'SMA', 'EMA'], group = GA, inline = '2')
-mptable_pos = input.string('Bottom Right', '', options = ['Bottom Right', 'Middle Right'], group = GA, inline = '2')
-smtable_on = input.bool(true, 'Summary', group = GPT, inline = '1')
-mptable_on = input.bool(true, 'Monthly', group = GPT, inline = '1')
-allTableSize = input.string('normal', '', options = ['tiny', 'small', 'normal', 'auto'], group = GPT, inline = '1')
-// DATE FILTER
 timezone = 'Asia/Jakarta'
-usefromDate = input.bool(false, title = 'From ', group = GPT, inline = 'from')
-fromDate = input.time(1640971800000, title = '', group = GPT, inline = 'from')
-usetoDate = input.bool(false, title = 'To ', group = GPT, inline = 'to')
-toDate = input.time(1736181000000, title = '', group = GPT, inline = 'to')
+G0 = '══════════════  Appearance Settings  ════════════'
+a_lineHMA = input.bool(true, 'MA', group = G0, inline = '1')
+a_pip20 = input.bool(false, '20+', group = G0, inline = '1')
+a_bgTrd = input.bool(true, 'W&L', group = G0, inline = '1')
+a_candle = input.bool(true, 'MOM', group = G0, inline = '1')
+a_label = input.bool(true, 'PIP', group = G0, inline = '1')
+a_rvol = input.bool(false, 'VOL', group = G0, inline = '1')
+a_maType = input.string('HMA', '', options = ['HMA', 'SMA', 'EMA'], group = G0, inline = '2')
+G1 = '══════════════  Table Settings  ═════════════════'
+smtable_on = input.bool(true, 'Sum', group = G1, inline = '1')
+mptable_on = input.bool(true, 'Mon', group = G1, inline = '1')
+tableSize = input.string('small', '', options = ['tiny', 'small', 'normal', 'auto'], group = G1, inline = '1')
+mptable_pos = input.string('Bottom Right', '', options = ['Bottom Right', 'Middle Right'], group = G1, inline = '1')
+usefromDate = input.bool(false, title = 'From ', group = G1, inline = 'from')
+fromDate = input.time(1640971800000, title = '', group = G1, inline = 'from')
+usetoDate = input.bool(false, title = 'To ', group = G1, inline = 'to')
+toDate = input.time(1736181000000, title = '', group = G1, inline = 'to')
 dateFilter = tif.is_in_date_range(usefromDate, fromDate, usetoDate, toDate, timezone, timezone)
 // SWITCH ////////////////////////////////////////
 var string B_setup = 'X'
 var string S_setup = 'X'
 var string P_setup = 'X'
+var string Z_setup = 'X'
 switch syminfo.ticker
     'XAUUSD' => 
         B_setup := 'X'
@@ -75,21 +76,26 @@ switch syminfo.ticker
         P_setup := 'U'
         Z_setup := 'U'
 B(B_setup) => switch B_setup
-    'X' => [true, close, 0.5, false, 25, 4, 'HMA', true, hlcc4, 0.5, false, 30, 4, 'HMA']
-    'G' => [true, ohlc4, 0.5, false, 40, 4, 'HMA', true, ohlc4, 0.5, false, 30, 4, 'HMA']
+    'X' => [true, close, 0.5, 1.2, false, 25, 4, 'HMA', true, hlcc4, 0.5, 1, false, 30, 4, 'HMA']
+    'G' => [true, ohlc4, 0.5, 1, false, 40, 4, 'HMA', true, ohlc4, 0.5, 1, false, 30, 4, 'HMA']
 S(S_setup) => switch S_setup
-    'X' => [true, ohlc4, 0.5, false, 15, 3, 'HMA', true, ohlc4, 0.5, false, 40, 3, 'HMA']
-    'G' => [true, close, 0.5, false, -50, 5, 'HMA', true, hlcc4, 0.5, false, -40, 5, 'HMA']
+    'X' => [true, ohlc4, 0.5, 1, false, 15, 3, 'HMA', true, ohlc4, 0.5, 1, false, 40, 3, 'HMA']
+    'G' => [true, close, 0.5, 1, false, -50, 5, 'HMA', true, hlcc4, 0.5, 1, false, -40, 5, 'HMA']
 P(P_setup) => switch P_setup
-    'X' => [60, 100, 16, 1]
-    'G' => [90, 120, 20, 1.5]
+    'X' => [60, 100, 16]
+    'G' => [90, 120, 20]
 Z(Z_setup) => switch Z_setup
     'X' => [ohlc4, ohlc4]
     'G' => [close, close]
-[EB, BSRC, BSL, BATR, BDIS, BLF, BFOR, EBT, BTSRC, BTSL, BTATR, BTDIS, BTLF, BTFOR] = B(B_setup)
-[ES, SSRC, SSL, SATR, SDIS, SLF, SFOR, EST, STSRC, STSL, STATR, STDIS, STLF, STFOR] = S(S_setup)
-[LH1, LH2, TTM, MULT] = P(P_setup)
+[EB, BSRC, BSL, BMUL, BATR, BDIS, BLF, BFOR, EBT, BTSRC, BTSL, BTMUL, BTATR, BTDIS, BTLF, BTFOR] = B(B_setup)
+[ES, SSRC, SSL, SMUL, SATR, SDIS, SLF, SFOR, EST, STSRC, STSL, STMUL, STATR, STDIS, STLF, STFOR] = S(S_setup)
+[LH1, LH2, TTM] = P(P_setup)
 [Lsrc, Tsrc] = Z(Z_setup)
+int LV1 = 14
+int LV2 = 21
+float rvolTh = 1
+int back_length = 14
+float threshold = 2
 // MAIN BACKEND ///////////////////////////////////////
 gmt_offset = 7 * 3600
 newTradeClosed = strategy.closedtrades != strategy.closedtrades[1]
@@ -102,12 +108,13 @@ lastExitPrice = strategy.closedtrades.exit_price(strategy.closedtrades - 1)
 lastExitTime = strategy.closedtrades.exit_time(strategy.closedtrades - 1) + gmt_offset
 lastEntryBar = strategy.closedtrades.entry_bar_index(strategy.closedtrades - 1)
 lastExitBar = strategy.closedtrades.exit_bar_index(strategy.closedtrades - 1)
+lastExitId = strategy.closedtrades.exit_id(strategy.closedtrades - 1)
 orderUp = strategy.position_size > 0
 orderDn = strategy.position_size < 0
 noOrder = strategy.opentrades == 0
 LOSE = strategy.losstrades > strategy.losstrades[1]
 WIN = strategy.wintrades > strategy.wintrades[1]
-atrFunc = ta.atr(14)
+
 ratioPercent(e, v) =>
     e * (v / 100)
 numToPips(e) => // convert num to pips
@@ -128,38 +135,57 @@ pipsToStr(e) => // convert pips TV to TF
         e * 10000
     else
         na
-f_cal(s, l1, l2, m, isGreater) =>
+ma_filter(s, l1, l2, m, isGreater) =>
     float v1 = switch m
         'HMA' => ta.hma(s, l1)
         'SMA' => ta.sma(s, l1)
         'EMA' => ta.ema(s, l1)
+        'ATR' => ta.atr(l1)
     float v2 = switch m
         'HMA' => ta.hma(s, l2)
         'SMA' => ta.sma(s, l2)
         'EMA' => ta.ema(s, l2)
-    isGreater ? v1 > v2 : v1 < v2
-drawMA(t,s,l) =>
-    switch t
-        'SMA'  => ta.sma(s,l)
-        'EMA'  => ta.ema(s,l)
-        'HMA'  => ta.hma(s,l)
+        'ATR' => ta.atr(l2)
+    isGreater ? v1 >= v2 : v1 <= v2
+generateMA(t,s,l) => switch t
+    'SMA'  => ta.sma(s,l)
+    'EMA'  => ta.ema(s,l)
+    'HMA'  => ta.hma(s,l)
+// Volatility
+atr1 = ta.atr(LV1)
+atr2 = ta.atr(LV2)
+rvol = atr1 > (atr2 * rvolTh)
+atrFunc = ta.atr(LV1)
+plot(atr1, title = 'atr1')
+plot(atr2 * rvolTh, title = 'atr2')
+vol_color = rvol ? _LIME : _BLACK
+plotshape(a_rvol ? true : false, 'Volatility', style = shape.circle, location = location.top, color = vol_color, size = size.tiny)
+// Big Candle
+body_size = math.abs(close - open)
+total_size = high - low
+avg_body_size = ta.sma(body_size, back_length)
+avg_total_size = ta.sma(total_size, back_length)
+large_body = body_size > avg_body_size * threshold
+large_total = total_size > avg_total_size * threshold
+color_large = large_body or large_total ? _BLUE : na
+plotcandle(open, high, low, close, color = color_large, title="Large Candlestick")
 // MOMENTUM
 mom = ta.linreg(Tsrc - math.avg(math.avg(ta.highest(high, TTM), ta.lowest(low, TTM)), ta.sma(Tsrc, TTM)), TTM, 0)
-iff_1 = mom > nz(mom[1]) ? color.new(_GREEN, 0) : color.new(_RED, 50)
-iff_2 = mom < nz(mom[1]) ? color.new(_RED, 0) : color.new(_GREEN, 50)
+iff_1 = mom > nz(mom[1]) ? color.new(_GREEN, 20) : color.new(_RED, 60)
+iff_2 = mom < nz(mom[1]) ? color.new(_RED, 20) : color.new(_GREEN, 60)
 mom_color = mom > 0 ? iff_1 : iff_2
 cross_up = ta.crossover(mom, nz(mom[1]))
 cross_dn = ta.crossunder(mom, nz(mom[1]))
 // FILTER MA FORMATION
-fastMA = drawMA(maType, Lsrc, LH1)
-slowMA = drawMA(maType, Lsrc, LH2)
+fastMA = generateMA(a_maType, Lsrc, LH1)
+slowMA = generateMA(a_maType, Lsrc, LH2)
 fastMA_color = fastMA > fastMA[1] ? _GREEN : _RED
 slowMA_color = slowMA > slowMA[1] ? _GREEN : _RED
-b1_for = BFOR == 'NO' ? true : f_cal(Lsrc, LH1, LH2, BFOR, true)
-s1_for = SFOR == 'NO' ? true : f_cal(Lsrc, LH1, LH2, SFOR, false)
-b2_for = BTFOR == 'NO' ? true : f_cal(Lsrc, LH1, LH2, BTFOR, true)
-s2_for = STFOR == 'NO' ? true : f_cal(Lsrc, LH1, LH2, STFOR, false)
-barcolor(candle ? mom_color : na, title = 'Candle Color', editable = false)
+b1_for = BFOR == 'NO' ? true : ma_filter(Lsrc, LH1, LH2, BFOR, true)
+s1_for = SFOR == 'NO' ? true : ma_filter(Lsrc, LH1, LH2, SFOR, false)
+b2_for = BTFOR == 'NO' ? true : ma_filter(Lsrc, LH1, LH2, BTFOR, true)
+s2_for = STFOR == 'NO' ? true : ma_filter(Lsrc, LH1, LH2, STFOR, false)
+barcolor(a_candle ? mom_color : na, title = 'Candle Color', editable = false)
 // DECLARE VARIABLE TRADE
 type Suitable
     bool conf
@@ -179,63 +205,66 @@ var PendingOrder PB = PendingOrder.new('', na, na, na, na, false, 0)
 var PendingOrder PS = PendingOrder.new('', na, na, na, na, false, 0)
 var int signalMonthly = 0
 var int signalYearly = 0
-var B2_prep = false
-var S2_prep = false
+var int losstreak = 0
+var int maxLosstreak = 0
+var int barLastTradeLoss = 0
+var int noTradeBar = 0
+var B_prep = false
+var S_prep = false
 B1_confirm = barstate.isconfirmed and dateFilter and EB and cross_up and b1_for and noOrder and not WIN and not LOSE
-S1_confirm = barstate.isconfirmed and dateFilter and ES and cross_dn and s1_for and noOrder
-
+S1_confirm = barstate.isconfirmed and dateFilter and ES and cross_dn and s1_for and noOrder and not WIN and not LOSE
 B2_confirm = lastTradeLong and dateFilter and EBT and WIN and b2_for
 S2_confirm = lastTradeShort and dateFilter and EST and WIN and s2_for
 // ENTRY
-entryLong(e, a, d, m, i) =>
+entryLong(e, a, d, m, x, i) =>
     SG.long := true
     PB.stat := true
     PB.bar := bar_index
     PB.en := e + numToPips(d)
     PB.act := PB.en
     if a
-        PB.sl := PB.en - atrFunc * m * MULT
-        PB.tp := PB.en + atrFunc * m * 1
+        PB.sl := PB.en - atrFunc * m * x
+        PB.tp := PB.en + atrFunc * m * x * 2
     else
-        PB.sl := PB.en - ratioPercent(PB.en, m * MULT)
-        PB.tp := PB.en + ratioPercent(PB.en, 1 * MULT)
+        PB.sl := PB.en - ratioPercent(PB.en, m * x)
+        PB.tp := PB.en + ratioPercent(PB.en, 1 * x)
     if close < PB.en
         strategy.entry(i, strategy.long, stop = PB.en, alert_message = 'Buy Stop Triggered')
     else
         strategy.entry(i, strategy.long, limit = PB.en, alert_message = 'Buy Limit Triggered')
-entryShort(e, a, d, m, i) =>
+entryShort(e, a, d, m, x, i) =>
     SG.short := true
     PS.stat := true
     PS.bar := bar_index
     PS.en := e - numToPips(d)
     PS.act := PS.en
     if a
-        PS.sl := PS.en + atrFunc * m * MULT
-        PS.tp := PS.en - atrFunc * m * 1
+        PS.sl := PS.en + atrFunc * m * x
+        PS.tp := PS.en - atrFunc * m * x * 2
     else
-        PS.sl := PS.en + ratioPercent(PS.en, m * MULT)
-        PS.tp := PS.en - ratioPercent(PS.en, 1 * MULT)
+        PS.sl := PS.en + ratioPercent(PS.en, m * x)
+        PS.tp := PS.en - ratioPercent(PS.en, 1 * x)
     if close > PS.en
         strategy.entry(i, strategy.short, stop = PS.en, alert_message = 'Sell Stop Triggered')
     else
         strategy.entry(i, strategy.short, limit = PS.en, alert_message = 'Sell Limit Triggered')
 if B1_confirm
-    entryLong(BSRC, BATR, BDIS, BSL, 'B1')
+    entryLong(BSRC, BATR, BDIS, BSL, BMUL, 'B1')
     signalMonthly := signalMonthly + 1
 if B2_confirm
-    B2_prep := true
-if B2_prep and not WIN and noOrder
-    entryLong(BTSRC, BTATR, BTDIS, BTSL, 'B2')
-    B2_prep := false
+    B_prep := true
+if B_prep and not WIN and noOrder and barstate.isconfirmed and not PB.stat
+    entryLong(BTSRC, BTATR, BTDIS, BTSL, BTMUL, 'B2')
+    B_prep := false
     signalMonthly := signalMonthly + 1
 if S1_confirm
-    entryShort(SSRC, SATR, SDIS, SSL, 'S1')
+    entryShort(SSRC, SATR, SDIS, SSL, SMUL, 'S1')
     signalMonthly := signalMonthly + 1
 if S2_confirm
-    S2_prep := true
-if S2_prep and not WIN and noOrder
-    entryShort(STSRC, STATR, STDIS, STSL, 'S2')
-    S2_prep := false
+    S_prep := true
+if S_prep and not WIN and noOrder and barstate.isconfirmed and not PS.stat
+    entryShort(STSRC, STATR, STDIS, STSL, STMUL, 'S2')
+    S_prep := false
     signalMonthly := signalMonthly + 1
 // CANCEL
 cancelOrderB(f) =>
@@ -264,22 +293,21 @@ if orderDn
 if orderUp
     PB.stat := false
 exitOrder(i, s, t) =>
-    strategy.exit(i, from_entry = i, stop = s, limit = t, comment_loss = '', comment_profit = '', alert_profit = 'PROFIT', alert_loss = 'LOSE')
+    strategy.exit(i, from_entry = i, stop = s, limit = t, comment_loss = 'L', comment_profit = 'T', alert_profit = 'PROFIT', alert_loss = 'LOSE')
 exitOrder('S1', PS.sl, PS.tp)
 exitOrder('S2', PS.sl, PS.tp)
 exitOrder('B1', PB.sl, PB.tp)
 exitOrder('B2', PB.sl, PB.tp)
 // PLOTING
-plot(SG.atr, 'atr', color = _BLACK, style = plot.style_steplinebr)
-plotshape(SG.long, 'Buy Signal 1', location = location.belowbar, color = _GREEN, style = shape.triangleup, editable = false)
-plotshape(SG.short, 'Sell Signal 1', location = location.abovebar, color = _RED, style = shape.triangledown, editable = false)
+plotshape(cross_up, 'Buy Signal 1', location = location.belowbar, color = SG.long ? _GREEN : _GRAY, style = shape.circle)
+plotshape(cross_dn, 'Sell Signal 1', location = location.abovebar, color = SG.short ? _RED : _GRAY, style = shape.circle)
 // LINE ORDER
 plot(PB.stat ? PB.act : na, 'Order Line Buy', color = color.new(_FUCH, 0), style = plot.style_steplinebr, editable = false)
-plot(pip20 and PB.stat ? PB.act + numToPips(20) : na, 'Line20', color = color.new(_BLACK, 60), style = plot.style_steplinebr, editable = false)
-plot(pip20 and PB.stat ? PB.act - numToPips(20) : na, 'Line20', color = color.new(_BLACK, 60), style = plot.style_steplinebr, editable = false)
+plot(a_pip20 and PB.stat ? PB.act + numToPips(20) : na, 'Line20', color = color.new(_BLACK, 60), style = plot.style_steplinebr, editable = false)
+plot(a_pip20 and PB.stat ? PB.act - numToPips(20) : na, 'Line20', color = color.new(_BLACK, 60), style = plot.style_steplinebr, editable = false)
 plot(PS.stat ? PS.act : na, 'Order Line Sell', color = color.new(_FUCH, 0), style = plot.style_steplinebr, editable = false)
-plot(pip20 and PS.stat ? PS.act + numToPips(20) : na, 'Line20', color = color.new(_BLACK, 60), style = plot.style_steplinebr, editable = false)
-plot(pip20 and PS.stat ? PS.act - numToPips(20) : na, 'Line20', color = color.new(_BLACK, 60), style = plot.style_steplinebr, editable = false)
+plot(a_pip20 and PS.stat ? PS.act + numToPips(20) : na, 'Line20', color = color.new(_BLACK, 60), style = plot.style_steplinebr, editable = false)
+plot(a_pip20 and PS.stat ? PS.act - numToPips(20) : na, 'Line20', color = color.new(_BLACK, 60), style = plot.style_steplinebr, editable = false)
 // TP SL PENDING ORDER
 plot(SG.short ? PS.sl : na, 'Sell Signal SL', color = _ORANGE, style = plot.style_steplinebr, linewidth = 1, editable = false)
 plot(SG.short ? PS.tp : na, 'Sell Signal TP', color = _BLUE, style = plot.style_steplinebr, linewidth = 1, editable = false)
@@ -293,18 +321,28 @@ pb3 = plot(orderUp ? PB.tp : na, 'Buy TP Active', color = _GREEN, style = plot.s
 ps1 = plot(orderDn ? PS.en : na, 'Sell Entry Active', color = _BLACK, style = plot.style_steplinebr, editable = false)
 ps2 = plot(orderDn ? PS.sl : na, 'Sell SL Active', color = _RED, style = plot.style_steplinebr, editable = false)
 ps3 = plot(orderDn ? PS.tp : na, 'Sell TP Active', color = _GREEN, style = plot.style_steplinebr, editable = false)
-// PLOT MOVING AVERAGE 
-plot(lineMA ? fastMA : na, 'Hull MA 1', color = color.new(fastMA_color, 80), linewidth = 2, editable = false)
-plot(lineMA ? slowMA : na, 'Hull MA 2', color = color.new(slowMA_color, 60), linewidth = 3, editable = false)
-bgcolor(bgTrd and LOSE ? color.new(_RED, 90) : na, title = 'BG Loss', editable = false)
-bgcolor(bgTrd and WIN ? color.new(_GREEN, 90) : na, title = 'BG Win', editable = false)
+// PLOT MOVING AVERAGE
+plot(a_lineHMA ? fastMA : na, 'Hull MA 1', color = color.new(fastMA_color, 80), linewidth = 2, editable = false)
+plot(a_lineHMA ? slowMA : na, 'Hull MA 2', color = color.new(slowMA_color, 60), linewidth = 3, editable = false)
+bgcolor(a_bgTrd and LOSE ? color.new(_RED, 90) : na, title = 'BG Loss', editable = false)
+bgcolor(a_bgTrd and WIN ? color.new(_GREEN, 90) : na, title = 'BG Win', editable = false)
 fill(pb1, pb2, color = color.new(_RED, 80))
 fill(pb1, pb3, color = color.new(_GREEN, 80))
 fill(ps1, ps2, color = color.new(_RED, 80))
 fill(ps1, ps3, color = color.new(_GREEN, 80))
 // TABLE /////////////////////////////////////
-var table sm_table = table(na)
-var table mp_table = table(na)
+table_pos(p) =>
+    switch p
+        'Bottom Right' => position.bottom_right
+        'Middle Right' => position.middle_right
+table_size(e) =>
+    switch e
+        'auto'   => size.auto
+        'normal' => size.normal 
+        'small'  => size.small
+        'tiny'   => size.tiny
+mp_size = table_size(tableSize)
+mp_pos = table_pos(mptable_pos)
 pipsBG(e) =>
     e >= 200 ? color.new(_GREEN, 70) : e >= 0 and e < 200 ? color.new(_BLUE, 70) : e <= -0.1 and e > -100 ? color.new(_ORANGE, 70) : color.new(_RED, 70)
 avgPipsBG(e) =>
@@ -327,18 +365,7 @@ f_src(e) =>
         hlcc4 => 'hlcc4'
         hl2   => 'hl2'
         hlc3  => 'hlc3'
-table_pos(p) =>
-    switch p
-        'Bottom Right' => position.bottom_right
-        'Middle Right' => position.middle_right
-table_size(e) =>
-    switch e
-        'auto'   => size.auto
-        'normal' => size.normal 
-        'small'  => size.small
-        'tiny'   => size.tiny
-mp_size = table_size(allTableSize)
-mp_pos = table_pos(mptable_pos)
+
 // DECLARE TABLE DATA VARIABLE
 type StrategyReturn
     float pips
@@ -351,23 +378,25 @@ type StrategyReturn
 var array<int> activeMonth = array.new_int(0)
 var array<StrategyReturn> M_Returns = array.new<StrategyReturn>(0)
 var array<StrategyReturn> Y_Returns = array.new<StrategyReturn>(0)
+var table sm_table = table(na)
+var table mp_table = table(na)
 current_month = month(time, timezone)
 previous_month = month(time[1], timezone)
 current_year = year(time, timezone)
 previous_year = year(time[1], timezone)
 new_month = current_month != previous_month
 new_year = current_year != previous_year
-bgcolor(labPips and new_month ? color.new(_BLUE, 60) : na, title = 'New Month', editable = false)
-bgcolor(labPips and new_year ? color.new(_ORANGE, 60) : na, title = 'New Year', editable = false)
+bgcolor(a_label and new_month ? color.new(_BLUE, 60) : na, title = 'New Month', editable = false)
+bgcolor(a_label and new_year ? color.new(_ORANGE, 60) : na, title = 'New Year', editable = false)
 var bool firstEntryTime = false
 // PIPS STORE
 var float onePips = 0
-var float grossProfitPips = 0
-var float grossLossPips = 0
-var float grossProfitLongPips = 0
-var float grossLossLongPips = 0
-var float grossProfitShortPips = 0
-var float grossLossShortPips = 0
+var float GProfit = 0
+var float Gloss = 0
+var float GPLong = 0
+var float GLLoss = 0
+var float GPShort = 0
+var float GLShort = 0
 var float accMonthlyPips = 0
 var float accYearlyPips = 0
 var float netPips = 0
@@ -379,13 +408,13 @@ var float drawdown = 0
 // BEST & WORST PIPS
 var float highestPips = 0
 var float yearlyPipsHigh = 0
+var float monthlyPipsHigh = 0
 var float currentYearlyDDpips = 0
+var float currentMonthlyDDpips = 0
 var float yearlyMaxDDpips = 0
+var float monthlyMaxDDpips = 0
 var float bestAccYearlyPips = 0
 var float bestAccMonthlyPips = 0
-var float currentMonthlyDDpips = 0
-var float monthlyMaxDDpips = 0
-var float monthlyPipsHigh = 0
 // COUNT TRADE
 var int tradeMonthly = 0
 var int tradeYearly = 0
@@ -411,25 +440,31 @@ if newTradeClosed
         onePips := lastExitPrice - lastEntryPrice
         totalLongTrade := totalLongTrade + 1
         if onePips > 0 // WIN
+            losstreak := 0
             totalLongTradeWins := totalLongTradeWins + 1
-            grossProfitPips := grossProfitPips + pipsToStr(onePips) // GP
-            grossProfitLongPips := grossProfitLongPips + pipsToStr(onePips) // GPL
+            GProfit := GProfit + pipsToStr(onePips) // GP
+            GPLong := GPLong + pipsToStr(onePips) // GPL
         else // LOSE
-            grossLossPips := grossLossPips + math.abs(pipsToStr(onePips)) // GL
-            grossLossLongPips := grossLossLongPips + math.abs(pipsToStr(onePips)) // GLL
+            losstreak += 1
+            Gloss := Gloss + math.abs(pipsToStr(onePips)) // GL
+            GLLoss := GLLoss + math.abs(pipsToStr(onePips)) // GLL
     else if lastTradeShort // SHORT
         onePips := lastEntryPrice - lastExitPrice
         totalShortTrade := totalShortTrade + 1
         if onePips > 0 // WIN
+            losstreak := 0
             totalShortTradeWins := totalShortTradeWins + 1
-            grossProfitPips := grossProfitPips + pipsToStr(onePips) // GP
-            grossProfitShortPips := grossProfitShortPips + pipsToStr(onePips) // GPS
+            GProfit := GProfit + pipsToStr(onePips) // GP
+            GPShort := GPShort + pipsToStr(onePips) // GPS
         else // LOSE
-            grossLossPips := grossLossPips + math.abs(pipsToStr(onePips)) // GL
-            grossLossShortPips := grossLossShortPips + math.abs(pipsToStr(onePips)) // GLS
-    netPips := grossProfitPips - grossLossPips
+            losstreak += 1
+            Gloss := Gloss + math.abs(pipsToStr(onePips)) // GL
+            GLShort := GLShort + math.abs(pipsToStr(onePips)) // GLS
+    netPips := GProfit - Gloss
     if highestPips < netPips 
         highestPips := netPips
+    if maxLosstreak < losstreak
+        maxLosstreak := losstreak
     // ACCUMULATION
     tradeMonthly := tradeMonthly + 1
     accMonthlyPips := pipsToStr(onePips) + accMonthlyPips[1]
@@ -461,7 +496,7 @@ if newTradeClosed
     totalWinRate := strategy.wintrades / strategy.closedtrades * 100
     longWinRate := nz(totalLongTradeWins / totalLongTrade * 100)
     shortWinRate := nz(totalShortTradeWins / totalShortTrade * 100)        
-    if labPips
+    if a_label
         a = lastTradeDir > 0 ? '\nTotalLong : ' + str.tostring(totalLongTrade) : '\nTotalShort : ' + str.tostring(totalShortTrade)
         b = 'EQ: ' + str.tostring(netPips) + '\nTotalTrade : ' + str.tostring(strategy.closedtrades) + ' (' + str.tostring(totalWinRate, '#.##') + '%)' + a 
         c = onePips > 0 ? high + high * 0.01 : low - low * 0.01
@@ -518,7 +553,7 @@ if barstate.islastconfirmedhistory
     cagr = (math.pow(final_value / strategy.initial_capital, 1 / time_diff_years) - 1) * 100
     percentReturn = strategy.netprofit / strategy.initial_capital * 100
     lastMonthRowIndex = startIndex < 5 ? 5 : startIndex
-    factorPips := grossProfitPips / grossLossPips
+    factorPips := GProfit / Gloss
     factorPercent := strategy.grossprofit / strategy.grossloss
 
     mp_table := table.new(mp_pos, columns = 20, rows = Y_Returns.size() + 5, border_width = 1)
@@ -555,22 +590,23 @@ if barstate.islastconfirmedhistory
                     a = 'Worst: ' + str.tostring(MR.worst) + '\nBest: ' + str.tostring(MR.best) + '\nTrades: ' + str.tostring(MR.trade) + '/' + str.tostring(MR.signal)
                     mp_table.cell(monthColumn, year_index + 1, str.tostring(MR.pips), tooltip = a, bgcolor = pipsBG(MR.pips), text_size = mp_size, text_font_family = mp_font)
             mp_table.cell(13, year_index + 1, str.tostring(YR.pips, '#.##'), tooltip = str.tostring(YR.signal) + '/' + str.tostring(YR.trade), bgcolor = netBG(YR.pips), text_font_family = mp_font, text_size = mp_size)
-            mp_table.cell(13, Y_Returns.size() + 1, str.tostring(netPips), bgcolor = _GRAY, text_font_family = mp_font, text_size = mp_size)
+            mp_table.cell(13, Y_Returns.size() + 1, str.tostring(netPips, '#.##'), bgcolor = _GRAY, text_font_family = mp_font, text_size = mp_size)
             mp_table.cell(14, year_index + 1, str.tostring(YR.best, '#.#'), bgcolor = color.new(_BLUE, 60), text_font_family = mp_font, text_size = mp_size)
             mp_table.cell(15, year_index + 1, str.tostring(YR.worst, '#.#'), tooltip = str.tostring(math.round(YR.worst / YR.pips * 100)) + ' %', bgcolor = color.new(_RED, 60), text_font_family = mp_font, text_size = mp_size)
             mp_table.cell(16, year_index + 1, str.tostring(YR.pips/YR.count, '#.#'), tooltip = str.tostring(YR.pips, '#.#') + '/' + str.tostring(YR.count), bgcolor = avgPipsBG(YR.pips/YR.count), text_font_family = mp_font, text_size = mp_size)
     // POPULATE ALL SETTINGS VARIABLE
-    set_b = str.format('{0} {1} {2} {3} {4} {5} {6}\n{7} {8} {9} {10} {11} {12} {13}', 
-     str.tostring(EB), str.tostring(f_src(BSRC)), str.tostring(BSL), str.tostring(BATR), str.tostring(BDIS), str.tostring(BLF), BFOR, str.tostring(EBT), str.tostring(f_src(BTSRC)), str.tostring(BTSL), str.tostring(BTATR), str.tostring(BTDIS), str.tostring(BTLF), BTFOR)
-    set_s = str.format('\n{0} {1} {2} {3} {4} {5} {6}\n{7} {8} {9} {10} {11} {12} {13}',
-     str.tostring(ES), str.tostring(f_src(SSRC)), str.tostring(SSL), str.tostring(SATR), str.tostring(SDIS), str.tostring(SLF), SFOR, str.tostring(EST), str.tostring(f_src(STSRC)), str.tostring(STSL), str.tostring(STATR), str.tostring(STDIS), str.tostring(STLF), STFOR)
-    set_p = str.format('\n{0} {1} {2} {3} {4} {5}',
-     str.tostring(LH1), str.tostring(LH2), str.tostring(f_src(Lsrc)), str.tostring(TTM), str.tostring(MULT), str.tostring(f_src(Tsrc)))
+    gap = strategy.closedtrades - totalLongTrade - totalShortTrade
+    set_b = str.format('{0} {1} {2} {3} {4} {5} {6} {7}\n{8} {9} {10} {11} {12} {13} {14} {15}',
+     str.tostring(EB), str.tostring(f_src(BSRC)), str.tostring(BSL), str.tostring(BMUL), str.tostring(BATR), str.tostring(BDIS), str.tostring(BLF), BFOR, str.tostring(EBT), str.tostring(f_src(BTSRC)), str.tostring(BTSL), str.tostring(BTMUL), str.tostring(BTATR), str.tostring(BTDIS), str.tostring(BTLF), BTFOR)
+    set_s = str.format('\n{0} {1} {2} {3} {4} {5} {6} {7}\n{8} {9} {10} {11} {12} {13} {14} {15}',
+     str.tostring(ES), str.tostring(f_src(SSRC)), str.tostring(SSL), str.tostring(BTMUL), str.tostring(SATR), str.tostring(SDIS), str.tostring(SLF), SFOR, str.tostring(EST), str.tostring(f_src(STSRC)), str.tostring(STSL), str.tostring(STMUL), str.tostring(STATR), str.tostring(STDIS), str.tostring(STLF), STFOR)
+    set_p = str.format('\n{0} {1} {2} {3} {4}',
+     str.tostring(LH1), str.tostring(LH2), str.tostring(f_src(Lsrc)), str.tostring(TTM), str.tostring(f_src(Tsrc)))
     sm_table := table.new(position.top_right, columns = 4, rows = 20, border_color = _GRAY, border_width = 1)
     sm_table.merge_cells(0, 8, 3, 8)
     // SUMMARY TABLE
     if smtable_on
-        sm_table.cell(0,  0, 'Trade', text_size = mp_size)
+        sm_table.cell(0,  0, 'Trade', bgcolor = gap > 0 ? _RED : na, tooltip = str.tostring(gap), text_size = mp_size)
         sm_table.cell(0,  1, 'Rate', text_size = mp_size)
         sm_table.cell(0,  2, 'PF Pips', text_size = mp_size)
         sm_table.cell(0,  3, str.tostring(highestPips), bgcolor = color.new(_GREEN, 70), tooltip = 'Highest Pips', text_font_family = mp_font, text_size = mp_size)
@@ -580,10 +616,10 @@ if barstate.islastconfirmedhistory
         sm_table.cell(0,  7, 'T/Month', text_size = mp_size, tooltip = 'Avg trade per month')
         sm_table.cell(0,  8, str.tostring(set_b + set_s + set_p), bgcolor = color.new(_GRAY, 70), text_font_family = mp_font, text_size = mp_size)
 
-        sm_table.cell(1,  0, str.tostring(strategy.closedtrades), tooltip = str.tostring(strategy.closedtrades - totalLongTrade - totalShortTrade), text_font_family = mp_font, text_size = mp_size)
+        sm_table.cell(1,  0, str.tostring(strategy.closedtrades), text_font_family = mp_font, text_size = mp_size)
         sm_table.cell(1,  1, str.tostring(totalWinRate, '#.##') + '%', bgcolor = winrateBG(totalWinRate), text_font_family = mp_font, text_size = mp_size)
         sm_table.cell(1,  2, str.tostring(factorPips, '#.###'), bgcolor = pfBG(factorPips), text_font_family = mp_font, text_size = mp_size)
-        sm_table.cell(1,  3, str.tostring(netPips), bgcolor = netPips == highestPips ? color.new(_GREEN, 70) : color.new(_RED, 70), tooltip = str.tostring('Current Pips'), text_font_family = mp_font, text_size = mp_size)
+        sm_table.cell(1,  3, str.tostring(netPips, '#.##'), bgcolor = netPips == highestPips ? color.new(_GREEN, 70) : color.new(_RED, 70), tooltip = str.tostring('Current Pips'), text_font_family = mp_font, text_size = mp_size)
         sm_table.cell(1,  4, usefromDate ? entryFirst : na, text_font_family = mp_font, text_size = mp_size)
         sm_table.cell(1,  5, str.tostring(netPips/strategy.closedtrades, '#.##'), tooltip = str.tostring(netPips) +'/'+ str.tostring(strategy.closedtrades), text_font_family = mp_font, text_size = mp_size)
         sm_table.cell(1,  6, str.tostring(netPips/M_Returns.size(), '#.##'), tooltip = str.tostring(netPips) +'/'+ str.tostring(M_Returns.size()), text_font_family = mp_font, text_size = mp_size)
@@ -591,11 +627,11 @@ if barstate.islastconfirmedhistory
 
         sm_table.cell(2,  0, str.tostring(totalLongTrade), text_font_family = mp_font, text_size = mp_size)
         sm_table.cell(2,  1, str.tostring(longWinRate, '#.##') + '%', bgcolor = winrateBG(longWinRate), text_font_family = mp_font, text_size = mp_size)
-        sm_table.cell(2,  2, 'PF %', text_size = mp_size)
+        sm_table.cell(2,  2, 'RR', text_size = mp_size)
         sm_table.cell(2,  3, '$'+str.tostring(final_value, '#.#'), text_font_family = mp_font, tooltip = 'EV : ' + str.tostring(strategy.initial_capital), text_size = mp_size)
         sm_table.cell(2,  4, 'End', text_size = mp_size)
         sm_table.cell(2,  5, 'CAGR', text_size = mp_size)
-        sm_table.cell(2,  6, 'MaxDD', text_size = mp_size)
+        sm_table.cell(2,  6, 'MaxLS', text_size = mp_size)
         sm_table.cell(2,  7, 'AvgBar', text_size = mp_size)
 
         sm_table.cell(3,  0, str.tostring(totalShortTrade), text_font_family = mp_font, text_size = mp_size)
@@ -604,6 +640,6 @@ if barstate.islastconfirmedhistory
         sm_table.cell(3,  3, str.tostring(percentReturn, '#.##') + '%', text_font_family = mp_font, text_size = mp_size)
         sm_table.cell(3,  4, usetoDate ? exitLast : na, text_font_family = mp_font, text_size = mp_size)
         sm_table.cell(3,  5, str.tostring(cagr, '#.##') + '%', text_font_family = mp_font, text_size = mp_size)
-        sm_table.cell(3,  6, str.tostring(maxDrawdown, '#.##') + '%', text_font_family = mp_font, text_size = mp_size)
+        sm_table.cell(3,  6, str.tostring(maxLosstreak), text_font_family = mp_font, text_size = mp_size)
         sm_table.cell(3,  7, str.tostring(math.ceil(avgBarsInTrades)), text_font_family = mp_font, text_size = mp_size)
-// END 609 ///////////////////////////////////////////
+// END 645 //////////////////////////////////////////
